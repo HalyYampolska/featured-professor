@@ -149,15 +149,34 @@ wp.blocks.registerBlockType("ourplugin/featured-professor", {
 function EditComponent(props) {
   const [thePreview, setThePreview] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("");
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    async function go() {
-      const response = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_3___default()({
-        path: `/featuredProfessor/v1/getHTML?profID=${props.attributes.profID}`,
-        method: "GET"
-      });
-      setThePreview(response);
+    if (props.attributes.profID) {
+      updateTheMeta();
+      async function go() {
+        const response = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_3___default()({
+          path: `/featuredProfessor/v1/getHTML?profID=${props.attributes.profID}`,
+          method: "GET"
+        });
+        setThePreview(response);
+      }
+      go();
     }
-    go();
   }, [props.attributes.profID]);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    return () => {
+      updateTheMeta();
+    };
+  }, []);
+  function updateTheMeta() {
+    const profsForMeta = wp.data.select("core/block-editor").getBlocks().filter(x => x.name == "ourplugin/featured-professor").map(x => x.attributes.profID).filter((x, index, arr) => {
+      return arr.indexOf(x) == index;
+    });
+    console.log(profsForMeta);
+    wp.data.dispatch("core/editor").editPost({
+      meta: {
+        featuredprofessor: profsForMeta
+      }
+    });
+  }
   const allProfs = (0,_wordpress_data__WEBPACK_IMPORTED_MODULE_2__.useSelect)(select => {
     return select("core").getEntityRecords("postType", "professor", {
       per_page: -1
